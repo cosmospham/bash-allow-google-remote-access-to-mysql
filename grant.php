@@ -41,10 +41,11 @@ $table_list = [
 $dbname = 'test';
 $username = 'testuser';
 $pw = 'pass';
-$file = __DIR__.'/grant.sh';
+$cmd = 'docker exec ost_mysql_1 mysql -u root -proot mysql -e ';
 
 function grant_mysql_table_to_google() {
-    global $google_ip_list, $table_list, $dbname, $username, $pw, $file;
+    global $google_ip_list, $table_list, $dbname, $username, $pw, $cmd;
+    $file = __DIR__.'/___grant.sh';
 
     $text = [
         '#!/bin/bash',
@@ -62,11 +63,37 @@ function grant_mysql_table_to_google() {
     $text = array_merge($text, [
         'EOF',
         '}',
-        'docker exec ost_mysql_1 mysql -u root -proot mysql -e "$(sql_statement)"',
+        $cmd.' "$(sql_statement)"',
     ]);
 
     file_put_contents($file, implode("\n", $text));
 }
+function revoke_mysql_table_to_google() {
+    global $google_ip_list, $table_list, $dbname, $username, $cmd;
+
+    $text = [
+        '#!/bin/bash',
+        'sql_statement() {',
+        'cat <<EOF',
+    ];
+    foreach ($google_ip_list as $cidr) {
+        $ip = cidrToRange($cidr);
+
+        foreach ($table_list as $table) {
+            $text[] = "REVOKE ALL ON $dbname.* FROM  $username@'$ip';";
+            $text[] = "DROP USER $username@'$ip'";
+        }
+    }
+
+    $text = array_merge($text, [
+        'EOF',
+        '}',
+        $cmd.' "$(sql_statement)"',
+    ]);
+
+    file_put_contents(__DIR__.'/___revoke.sh', implode("\n", $text));
+}
 
 grant_mysql_table_to_google();
+revoke_mysql_table_to_google();
 ?>

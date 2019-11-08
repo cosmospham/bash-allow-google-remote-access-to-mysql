@@ -94,6 +94,34 @@ function revoke_mysql_table_to_google() {
     file_put_contents(__DIR__.'/___revoke.sh', implode("\n", $text));
 }
 
+function open_firewall() {
+    global $google_ip_list;
+
+    $text = [
+        '#!/bin/bash',
+    ];
+    foreach ($google_ip_list as $cidr) {
+        $text[] = "iptables -A INPUT -i eth0 -s $cidr -p tcp --destination-port 3306 -j ACCEPT";
+    }
+
+    file_put_contents(__DIR__.'/___open_firewall.sh', implode("\n", $text));
+}
+
+function close_firewall() {
+    global $google_ip_list;
+
+    $text = [
+        '#!/bin/bash',
+    ];
+    foreach ($google_ip_list as $cidr) {
+        $text[] = "iptables -D INPUT -i eth0 -s $cidr -p tcp --destination-port 3306 -j ACCEPT";
+    }
+
+    file_put_contents(__DIR__.'/___close_firewall.sh', implode("\n", $text));
+}
+
 grant_mysql_table_to_google();
 revoke_mysql_table_to_google();
+open_firewall();
+close_firewall();
 ?>

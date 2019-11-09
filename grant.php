@@ -1,4 +1,9 @@
 <?php
+
+if (!file_exists(__DIR__.'/config.php')) die;
+
+include __DIR__.'/config.php';
+
 function cidrToRange($cidr) {
     $cidr = explode('/', $cidr);
     $from = long2ip((ip2long($cidr[0])) & ((-1 << (32 - (int)$cidr[1]))));
@@ -13,35 +18,6 @@ function cidrToRange($cidr) {
     $netmask = implode('.', $netmask);
     return $cidr[0].'/'.$netmask;
 }
-
-$google_ip_list = [
-    '64.18.0.0/20',
-    '64.233.160.0/19',
-    '66.102.0.0/20',
-    '66.249.80.0/20',
-    '72.14.192.0/18',
-    '74.125.0.0/16',
-    '108.177.8.0/21',
-    '173.194.0.0/16',
-    '207.126.144.0/20',
-    '209.85.128.0/17',
-    '216.58.192.0/19',
-    '216.239.32.0/19',
-];
-
-$table_list = [
-    'tugo_osticket_call_phonenumber',
-    'tugo_osticket_sms_phonenumber',
-    'tugo_osticket_customer_age',
-    'tugo_osticket_customer',
-    'tugo_osticket_analytics_ticket',
-    'tugo_osticket_analytics_booking',
-];
-
-$dbname = 'test';
-$username = 'testuser';
-$pw = 'pass';
-$cmd = 'docker exec ost_mysql_1 mysql -u root -proot mysql -e ';
 
 function grant_mysql_table_to_google() {
     global $google_ip_list, $table_list, $dbname, $username, $pw, $cmd;
@@ -101,7 +77,7 @@ function open_firewall() {
         '#!/bin/bash',
     ];
     foreach ($google_ip_list as $cidr) {
-        $text[] = "iptables -A INPUT -i eth0 -s $cidr -p tcp --destination-port 3306 -j ACCEPT";
+        $text[] = "iptables -A INPUT -i eth0 -s $cidr -p tcp --destination-port $mysql_port -j ACCEPT";
     }
 
     file_put_contents(__DIR__.'/___open_firewall.sh', implode("\n", $text));
@@ -114,7 +90,7 @@ function close_firewall() {
         '#!/bin/bash',
     ];
     foreach ($google_ip_list as $cidr) {
-        $text[] = "iptables -D INPUT -i eth0 -s $cidr -p tcp --destination-port 3306 -j ACCEPT";
+        $text[] = "iptables -D INPUT -i eth0 -s $cidr -p tcp --destination-port $mysql_port -j ACCEPT";
     }
 
     file_put_contents(__DIR__.'/___close_firewall.sh', implode("\n", $text));

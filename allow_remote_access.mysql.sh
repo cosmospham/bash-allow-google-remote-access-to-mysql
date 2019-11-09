@@ -10,3 +10,5 @@ sed -i \
   -e "s/#* *bind-address=.*/bind-address=$REPLACEMENT_VALUE/"\
   -e "/skip-networking/s/^#*/#/" \
   $1
+  
+# usage: allow_remote_access.mysql.sh mysql.cnf

@@ -14,6 +14,8 @@ Copy `config.sample.php` to `config.php`. Then edit `config.php`.
 
 # Usage
 
+**BACKUP YOUR `mysql.conf` FIRST**
+
 ## Allow Google access:
 
 ```

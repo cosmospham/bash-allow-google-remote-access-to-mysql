@@ -36,6 +36,8 @@ function grant_mysql_table_to_google() {
         }
     }
 
+    $text[] = "FLUSH PRIVILEGES;";
+
     $text = array_merge($text, [
         'EOF',
         '}',
@@ -56,10 +58,12 @@ function revoke_mysql_table_to_google() {
         $ip = cidrToRange($cidr);
 
         foreach ($table_list as $table) {
-            $text[] = "REVOKE ALL ON $dbname.* FROM  $username@'$ip';";
+            $text[] = "REVOKE ALL ON $dbname.$table FROM  $username@'$ip';";
             $text[] = "DROP USER $username@'$ip'";
         }
     }
+
+    $text[] = "FLUSH PRIVILEGES;";
 
     $text = array_merge($text, [
         'EOF',
@@ -71,7 +75,7 @@ function revoke_mysql_table_to_google() {
 }
 
 function open_firewall() {
-    global $google_ip_list;
+    global $google_ip_list, $mysql_port;
 
     $text = [
         '#!/bin/bash',
@@ -84,7 +88,7 @@ function open_firewall() {
 }
 
 function close_firewall() {
-    global $google_ip_list;
+    global $google_ip_list, $mysql_port;
 
     $text = [
         '#!/bin/bash',

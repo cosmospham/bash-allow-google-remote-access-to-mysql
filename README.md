@@ -27,3 +27,9 @@ Copy `config.sample.php` to `config.php`. Then edit `config.php`.
 ```
 ./close_google.sh /etc/mysql.cnf
 ```
+
+## Restart MySQL
+
+```
+/etc/init.d/mysql restart
+```
